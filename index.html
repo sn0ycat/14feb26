@@ -241,7 +241,7 @@ function spawnObject() {
 
     let type = "heart";
 
-    if (no_letter === 0 && score >= -1 && Math.random() < 0.25) {
+    if (no_letter === 0 && score >= 15 && Math.random() < 0.25) {
         type = "letter";
         obj.textContent = "✉";
     } else {
