@@ -54,22 +54,27 @@ body {
     height: 40px;
     background: #8b4513;
     border-radius: 0 0 20px 20px;
+    touch-action: pan-x; /* ✅ Только горизонтальное касание */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 /* Падающие */
 .fall {
     position: absolute;
     font-size: 50px;
+    pointer-events: none; /* ✅ Не мешают касаниям */
 }
 
 /* ===== КОНВЕРТ ===== */
-
 #envelope {
     position: absolute;
     width: 340px;
     height: 240px;
     transform: scale(0);
     z-index: 20;
+    pointer-events: none; /* ✅ Не мешает игре */
 }
 
 /* Основание */
@@ -186,15 +191,36 @@ for (let i = 0; i < 15; i++) {
 }
 const pieces = document.querySelectorAll(".piece");
 
-/* Корзина */
+/* ✅ УНИВЕРСАЛЬНОЕ УПРАВЛЕНИЕ КОРЗИНОЙ (ПК + ТЕЛЕФОН) */
 let basketX = window.innerWidth / 2 - 50;
 basket.style.left = basketX + "px";
 
+function updateBasket(clientX) {
+    basketX = Math.max(0, Math.min(window.innerWidth - 100, clientX - 50));
+    basket.style.left = basketX + "px";
+}
+
+// 👇 МЫШЬ ДЛЯ ПК
 document.addEventListener("mousemove", e => {
     if (paused) return;
-    basketX = e.clientX - 50;
-    basket.style.left = basketX + "px";
+    updateBasket(e.clientX);
 });
+
+// 👇 ПАЛЬЦА ДЛЯ ТЕЛЕФОНА
+document.addEventListener("touchstart", e => {
+    if (paused) return;
+}, { passive: true });
+
+document.addEventListener("touchmove", e => {
+    if (paused) return;
+    e.preventDefault(); // Блокируем скролл страницы
+    const touch = e.touches[0];
+    updateBasket(touch.clientX);
+}, { passive: false });
+
+document.addEventListener("touchend", e => {
+    if (paused) return;
+}, { passive: true });
 
 function removeAllLetters() {
     document.querySelectorAll('.fall').forEach(obj => {
@@ -273,7 +299,6 @@ setInterval(spawnObject, 800);
 
 /* ПОИМКА ПИСЬМА */
 function catchLetter(x, y) {
-
     removeAllLetters();
 
     no_letter = 1;
@@ -285,6 +310,7 @@ function catchLetter(x, y) {
     envelope.style.top = y + "px";
     envelope.style.transform = "translate(-50%, -50%) scale(0.1)";
     envelope.style.display = "block";
+    envelope.style.pointerEvents = "auto"; // Включаем взаимодействие
 
     // рост
     setTimeout(() => {
