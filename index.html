@@ -54,17 +54,18 @@ body {
     height: 40px;
     background: #8b4513;
     border-radius: 0 0 20px 20px;
-    touch-action: pan-x; /* ✅ Только горизонтальное касание */
+    touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    will-change: left;
 }
 
 /* Падающие */
 .fall {
     position: absolute;
     font-size: 50px;
-    pointer-events: none; /* ✅ Не мешают касаниям */
+    pointer-events: none;
 }
 
 /* ===== КОНВЕРТ ===== */
@@ -74,7 +75,7 @@ body {
     height: 240px;
     transform: scale(0);
     z-index: 20;
-    pointer-events: none; /* ✅ Не мешает игре */
+    pointer-events: none;
 }
 
 /* Основание */
@@ -191,7 +192,7 @@ for (let i = 0; i < 15; i++) {
 }
 const pieces = document.querySelectorAll(".piece");
 
-/* ✅ УНИВЕРСАЛЬНОЕ УПРАВЛЕНИЕ КОРЗИНОЙ (ПК + ТЕЛЕФОН) */
+/* ✅ УНИВЕРСАЛЬНОЕ УПРАВЛЕНИЕ (ПК + ТЕЛЕФОН) */
 let basketX = window.innerWidth / 2 - 50;
 basket.style.left = basketX + "px";
 
@@ -200,26 +201,27 @@ function updateBasket(clientX) {
     basket.style.left = basketX + "px";
 }
 
-// 👇 МЫШЬ ДЛЯ ПК
+// МЫШЬ (ПК)
 document.addEventListener("mousemove", e => {
     if (paused) return;
     updateBasket(e.clientX);
 });
 
-// 👇 ПАЛЬЦА ДЛЯ ТЕЛЕФОНА
+// ТЕЛЕФОН (БЕЗ passive: false - работает везде!)
+let isTouching = false;
 document.addEventListener("touchstart", e => {
     if (paused) return;
+    isTouching = true;
 }, { passive: true });
 
 document.addEventListener("touchmove", e => {
-    if (paused) return;
-    e.preventDefault(); // Блокируем скролл страницы
+    if (paused || !isTouching) return;
     const touch = e.touches[0];
     updateBasket(touch.clientX);
-}, { passive: false });
+}, { passive: true });
 
 document.addEventListener("touchend", e => {
-    if (paused) return;
+    isTouching = false;
 }, { passive: true });
 
 function removeAllLetters() {
@@ -239,7 +241,7 @@ function spawnObject() {
 
     let type = "heart";
 
-    if (no_letter === 0 && score >= 15 && Math.random() < 0.25) {
+    if (no_letter === 0 && score >= -1 && Math.random() < 0.25) {
         type = "letter";
         obj.textContent = "✉";
     } else {
@@ -256,7 +258,6 @@ function spawnObject() {
     let y = -50;
 
     const fall = setInterval(() => {
-        
         if (paused) return;
 
         if (y > window.innerHeight) {
@@ -291,7 +292,6 @@ function spawnObject() {
 
             scoreBox.textContent = `${score} / 15`;
         }
-
     }, 20);
 }
 
@@ -310,7 +310,7 @@ function catchLetter(x, y) {
     envelope.style.top = y + "px";
     envelope.style.transform = "translate(-50%, -50%) scale(0.1)";
     envelope.style.display = "block";
-    envelope.style.pointerEvents = "auto"; // Включаем взаимодействие
+    envelope.style.pointerEvents = "auto";
 
     // рост
     setTimeout(() => {
